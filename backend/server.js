@@ -129,9 +129,14 @@ app.post('/api/auth/signup', async (req, res) => {
   const hashed = await bcrypt.hash(password, 10)
 
   // Save user to DB
+// First user ever becomes Admin, everyone else is Member
+  const existingUsers = await pool.query('SELECT COUNT(*) FROM users')
+  const assignedRole = existingUsers.rows[0].count === '0' ? 'admin' : 'member'
+
+  // Save user to DB
   const result = await pool.query(
     'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
-    [name, email, hashed, role || 'member']
+    [name, email, hashed, assignedRole]
   )
 
   const user = result.rows[0]
