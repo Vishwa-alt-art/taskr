@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Taskr — Team Task Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+/* =============================================
+   DESIGN SYSTEM
+   - Font: Syne (headings) + DM Sans (body)
+   - Palette: dark slate + electric lime accent
+   - Feel: utilitarian, sharp, no-fluff
+   ============================================= */
+:root{
+  --bg:#0F1117;
+  --surface:#181B24;
+  --surface2:#1F2330;
+  --border:#2A2E3E;
+  --accent:#C8F135;
+  --accent-dim:#8BA82A;
+  --text:#F0F2F8;
+  --muted:#7A7F94;
+  --danger:#FF5656;
+  --warn:#F5A623;
+  --success:#4ADE80;
+  --info:#60A5FA;
+  --radius:10px;
+  --radius-lg:16px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+
+/* ── UTILITIES ─────────────────────────────── */
+.hidden{display:none!important}
+.flex{display:flex}
+.col{flex-direction:column}
+.gap4{gap:4px}.gap8{gap:8px}.gap12{gap:12px}.gap16{gap:16px}.gap24{gap:24px}
+.align-center{align-items:center}
+.justify-between{justify-content:space-between}
+.w100{width:100%}
+.muted{color:var(--muted);font-size:13px}
+.bold{font-weight:600}
+
+/* ── TYPOGRAPHY ────────────────────────────── */
+h1,h2,h3,h4{font-family:'Syne',sans-serif;font-weight:700;line-height:1.2}
+h1{font-size:32px}h2{font-size:22px}h3{font-size:17px}h4{font-size:14px;font-weight:600}
+
+/* ── BUTTONS ────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 18px;border-radius:var(--radius);
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+  cursor:pointer;border:none;transition:all .15s;white-space:nowrap
+}
+.btn-primary{background:var(--accent);color:#0F1117}
+.btn-primary:hover{background:#d9f54d;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:rgba(255,86,86,.12);color:var(--danger);border:1px solid rgba(255,86,86,.2)}
+.btn-danger:hover{background:rgba(255,86,86,.22)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+
+/* ── INPUTS ─────────────────────────────────── */
+input,textarea,select{
+  width:100%;padding:10px 14px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:14px;
+  outline:none;transition:border-color .15s
+}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+select option{background:var(--surface2)}
+label{font-size:13px;color:var(--muted);margin-bottom:5px;display:block}
+
+/* ── CARDS ──────────────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:20px;
+}
+.card:hover{border-color:var(--border);} 
+
+/* ── BADGE / PILL ────────────────────────────── */
+.badge{
+  display:inline-block;padding:3px 10px;
+  border-radius:99px;font-size:11px;font-weight:600;
+  letter-spacing:.02em
+}
+.badge-todo{background:rgba(122,127,148,.15);color:var(--muted)}
+.badge-inprogress{background:rgba(96,165,250,.12);color:var(--info)}
+.badge-done{background:rgba(74,222,128,.12);color:var(--success)}
+.badge-overdue{background:rgba(255,86,86,.12);color:var(--danger)}
+.badge-admin{background:rgba(200,241,53,.12);color:var(--accent)}
+.badge-member{background:rgba(122,127,148,.1);color:var(--muted)}
+.badge-high{background:rgba(255,86,86,.12);color:var(--danger)}
+.badge-medium{background:rgba(245,166,35,.1);color:var(--warn)}
+.badge-low{background:rgba(74,222,128,.1);color:var(--success)}
+
+/* ══════════════════════════════════════════════
+   AUTH SCREEN
+   ══════════════════════════════════════════════ */
+#auth-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 20% 50%, rgba(200,241,53,.04) 0%, transparent 60%),
+                   radial-gradient(ellipse at 80% 20%, rgba(96,165,250,.04) 0%, transparent 50%);
+}
+.auth-box{width:100%;max-width:400px;padding:0 20px}
+.auth-logo{
+  font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
+  color:var(--accent);letter-spacing:-1px;margin-bottom:8px
+}
+.auth-sub{color:var(--muted);font-size:14px;margin-bottom:40px}
+.auth-tabs{display:flex;gap:0;background:var(--surface);border-radius:var(--radius);padding:4px;margin-bottom:28px}
+.auth-tab{
+  flex:1;text-align:center;padding:8px;border-radius:8px;
+  font-size:14px;font-weight:500;cursor:pointer;color:var(--muted);
+  transition:all .15s
+}
+.auth-tab.active{background:var(--surface2);color:var(--text)}
+.form-group{margin-bottom:16px}
+.auth-role-pick{display:flex;gap:8px;margin-bottom:16px}
+.role-btn{
+  flex:1;padding:10px;border-radius:var(--radius);border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted);font-size:13px;font-weight:500;
+  cursor:pointer;text-align:center;transition:all .15s
+}
+.role-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(200,241,53,.06)}
+.auth-err{
+  background:rgba(255,86,86,.1);border:1px solid rgba(255,86,86,.2);
+  border-radius:var(--radius);padding:10px 14px;font-size:13px;
+  color:var(--danger);margin-bottom:16px
+}
+
+/* ══════════════════════════════════════════════
+   APP SHELL (Sidebar + Main)
+   ══════════════════════════════════════════════ */
+#app-screen{display:none;min-height:100vh;flex-direction:row}
+#app-screen.active{display:flex}
+
+/* SIDEBAR */
+.sidebar{
+  width:220px;min-height:100vh;background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:24px 0;flex-shrink:0;
+  position:sticky;top:0;height:100vh;overflow-y:auto
+}
+.sidebar-logo{
+  font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+  color:var(--accent);padding:0 20px;margin-bottom:32px;
+  letter-spacing:-.5px
+}
+.sidebar-logo span{color:var(--muted);font-size:11px;font-weight:400;display:block;letter-spacing:.05em;margin-top:2px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 20px;color:var(--muted);font-size:14px;font-weight:500;
+  cursor:pointer;transition:all .12s;border-left:2px solid transparent;
+  text-decoration:none;margin:1px 0
+}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(200,241,53,.05)}
+.nav-icon{font-size:17px;width:20px;text-align:center}
+.sidebar-section{
+  padding:6px 20px 4px;font-size:10px;font-weight:600;
+  color:var(--muted);letter-spacing:.1em;margin-top:8px
+}
+.sidebar-bottom{margin-top:auto;padding:0 20px}
+.user-chip{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:10px 12px;
+  display:flex;align-items:center;gap:10px
+}
+.user-avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--accent);color:#0F1117;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;flex-shrink:0
+}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:11px;color:var(--muted)}
+
+/* MAIN CONTENT */
+.main{flex:1;padding:32px 36px;overflow-y:auto;max-width:1100px}
+.page{display:none}
+.page.active{display:block}
+.page-header{margin-bottom:28px}
+.page-header h2{font-size:26px;margin-bottom:4px}
+
+/* ── STAT CARDS ─────────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:28px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px 18px;
+}
+.stat-card.accent{border-color:rgba(200,241,53,.25);background:rgba(200,241,53,.04)}
+.stat-label{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.stat-num{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--text)}
+.stat-card.accent .stat-num{color:var(--accent)}
+
+/* ── ACTIVITY FEED ──────────────────────────── */
+.activity-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border)
+}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);flex-shrink:0;margin-top:6px
+}
+.activity-text{font-size:13px;color:var(--text);line-height:1.5}
+.activity-time{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── TASKS ──────────────────────────────────── */
+.tasks-grid{display:flex;flex-direction:column;gap:10px}
+.task-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px 18px;
+  display:flex;align-items:center;gap:16px;
+  transition:border-color .15s
+}
+.task-card:hover{border-color:var(--border)}
+.task-card.overdue{border-left:3px solid var(--danger)}
+.task-body{flex:1;min-width:0}
+.task-title{font-size:14px;font-weight:500;margin-bottom:4px}
+.task-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.task-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.status-select{
+  padding:4px 8px;border-radius:6px;font-size:12px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);cursor:pointer;max-width:130px
+}
+
+/* ── PROJECTS GRID ──────────────────────────── */
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.project-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:20px;
+  cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;gap:10px
+}
+.project-card:hover{border-color:rgba(200,241,53,.3);transform:translateY(-2px)}
+.project-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text)}
+.project-desc{font-size:13px;color:var(--muted);line-height:1.5}
+.project-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+
+/* ── MEMBERS ─────────────────────────────────── */
+.members-list{display:flex;flex-direction:column;gap:10px}
+.member-row{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:14px 18px;
+  display:flex;align-items:center;gap:14px
+}
+.member-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+  color:var(--accent);flex-shrink:0
+}
+
+/* ── MODAL ──────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);
+  display:none;align-items:center;justify-content:center;
+  z-index:999;backdrop-filter:blur(4px)
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:28px;
+  width:100%;max-width:480px;max-height:90vh;overflow-y:auto
+}
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px
+}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}
+.modal-close{
+  background:none;border:none;color:var(--muted);font-size:22px;
+  cursor:pointer;padding:4px;line-height:1
+}
+.modal-close:hover{color:var(--text)}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
+
+/* ── TOAST NOTIFICATION ─────────────────────── */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px 18px;
+  font-size:13px;z-index:9999;transform:translateY(80px);
+  opacity:0;transition:all .3s;max-width:300px
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:rgba(74,222,128,.3);color:var(--success)}
+.toast.error{border-color:rgba(255,86,86,.3);color:var(--danger)}
+
+/* ── EMPTY STATE ────────────────────────────── */
+.empty{
+  text-align:center;padding:48px 24px;
+  border:1px dashed var(--border);border-radius:var(--radius-lg)
+}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.4}
+.empty-text{color:var(--muted);font-size:14px}
+
+/* ── SECTION DIVIDER ─────────────────────────── */
+.section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px
+}
+.section-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+
+@media(max-width:700px){
+  .sidebar{width:60px;padding:16px 0}
+  .sidebar-logo span,.nav-item span,.user-info,.sidebar-section{display:none}
+  .sidebar-logo{font-size:18px;padding:0 16px}
+  .nav-item{padding:12px 18px;justify-content:center}
+  .main{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     AUTH SCREEN — Login & Signup
+     ════════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">Taskr</div>
+    <div class="auth-sub">Team task management, without the noise.</div>
+
+    <!-- Tab switcher: Login / Signup -->
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">Login</div>
+      <div class="auth-tab" onclick="switchAuthTab('signup')">Sign up</div>
+    </div>
+
+    <!-- Error message box (hidden by default) -->
+    <div id="auth-err" class="auth-err hidden"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••"/>
+      </div>
+      <button class="btn btn-primary w100" onclick="handleLogin()">Login →</button>
+      <p style="margin-top:16px;font-size:12px;color:var(--muted);text-align:center">
+        Demo Admin: admin@demo.com / admin123<br>
+        Demo Member: member@demo.com / member123
+      </p>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signup-form" class="hidden">
+      <div class="form-group">
+        <label>Your name</label>
+        <input type="text" id="signup-name" placeholder="Arun Kumar"/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="Min 6 characters"/>
+      </div>
+      <div class="form-group">
+        <label>I am joining as</label>
+        <div class="auth-role-pick">
+          <div class="role-btn active" id="role-member" onclick="pickRole('member')">👤 Member</div>
+          <div class="role-btn" id="role-admin" onclick="pickRole('admin')">👑 Admin</div>
+        </div>
+      </div>
+      <button class="btn btn-primary w100" onclick="handleSignup()">Create account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     APP SCREEN — Sidebar + Pages
+     ════════════════════════════════════════════ -->
+<div id="app-screen">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      Taskr
+      <span id="sidebar-role-label">loading...</span>
+    </div>
+
+    <div class="sidebar-section">MENU</div>
+
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">📊</span>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="showPage('projects')">
+      <span class="nav-icon">📁</span>
+      <span>Projects</span>
+    </div>
+    <div class="nav-item" onclick="showPage('tasks')">
+      <span class="nav-icon">✅</span>
+      <span>Tasks</span>
+    </div>
+    <!-- Members tab only shown to admins -->
+    <div class="nav-item" id="nav-members" style="display:none" onclick="showPage('members')">
+      <span class="nav-icon">👥</span>
+      <span>Members</span>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-avatar" id="sidebar-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-name">...</div>
+          <div class="user-role" id="sidebar-role">...</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost w100" style="margin-top:10px;font-size:13px" onclick="logout()">Sign out</button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ── DASHBOARD PAGE ────────────────────── -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <p class="muted">Here's what's happening with your team today.</p>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stats-grid">
+        <div class="stat-card accent">
+          <div class="stat-label">Total Tasks</div>
+          <div class="stat-num" id="stat-total">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">To Do</div>
+          <div class="stat-num" id="stat-todo">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">In Progress</div>
+          <div class="stat-num" id="stat-inprogress">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Done</div>
+          <div class="stat-num" id="stat-done">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" style="color:var(--danger)">Overdue</div>
+          <div class="stat-num" id="stat-overdue" style="color:var(--danger)">—</div>
+        </div>
+      </div>
+
+      <!-- Activity Feed -->
+      <div class="card">
+        <div class="section-head" style="margin-bottom:16px">
+          <div class="section-title">Recent Activity</div>
+        </div>
+        <div id="activity-feed">
+          <div class="muted" style="padding:20px 0;text-align:center">Loading activity...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROJECTS PAGE ─────────────────────── -->
+    <div class="page" id="page-projects">
+      <div class="page-header flex justify-between align-center">
+        <div>
+          <h2>Projects</h2>
+          <p class="muted">All your team projects in one place.</p>
+        </div>
+        <!-- Only admins see Create button -->
+        <button class="btn btn-primary" id="btn-create-project" onclick="openModal('modal-project')" style="display:none">
+          + New Project
+        </button>
+      </div>
+      <div class="projects-grid" id="projects-list">
+        <div class="muted">Loading...</div>
+      </div>
+    </div>
+
+    <!-- ── TASKS PAGE ────────────────────────── -->
+    <div class="page" id="page-tasks">
+      <div class="page-header flex justify-between align-center">
+        <div>
+          <h2>Tasks</h2>
+          <p class="muted" id="tasks-subtitle">All tasks in your workspace.</p>
+        </div>
+        <button class="btn btn-primary" id="btn-create-task" onclick="openModal('modal-task')" style="display:none">
+          + New Task
+        </button>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="flex gap8 align-center" style="margin-bottom:20px;flex-wrap:wrap">
+        <select id="filter-status" onchange="loadTasks()" style="max-width:160px">
+          <option value="">All statuses</option>
+          <option value="todo">To Do</option>
+          <option value="inprogress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+        <select id="filter-project" onchange="loadTasks()" style="max-width:180px">
+          <option value="">All projects</option>
+        </select>
+      </div>
+
+      <div class="tasks-grid" id="tasks-list">
+        <div class="muted">Loading...</div>
+      </div>
+    </div>
+
+    <!-- ── MEMBERS PAGE ──────────────────────── -->
+    <div class="page" id="page-members">
+      <div class="page-header">
+        <h2>Team Members</h2>
+        <p class="muted">Everyone on your workspace.</p>
+      </div>
+      <div class="members-list" id="members-list">
+        <div class="muted">Loading...</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ════════════════════════════════════════════
+     MODALS
+     ════════════════════════════════════════════ -->
+
+<!-- Create Project Modal -->
+<div class="modal-overlay" id="modal-project">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Project</div>
+      <button class="modal-close" onclick="closeModal('modal-project')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Project name *</label>
+      <input type="text" id="proj-name" placeholder="e.g. Website Redesign"/>
+    </div>
+    <div class="form-group">
+      <label>Description (optional)</label>
+      <textarea id="proj-desc" rows="3" placeholder="What is this project about?"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-project')">Cancel</button>
+      <button class="btn btn-primary" onclick="createProject()">Create Project →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Task</div>
+      <button class="modal-close" onclick="closeModal('modal-task')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Task title *</label>
+      <input type="text" id="task-title" placeholder="e.g. Design the logo"/>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="task-desc" rows="2" placeholder="What needs to be done?"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label>Project *</label>
+        <select id="task-project"></select>
+      </div>
+      <div class="form-group">
+        <label>Assign to</label>
+        <select id="task-assign"></select>
+      </div>
+      <div class="form-group">
+        <label>Due date</label>
+        <input type="date" id="task-due"/>
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select id="task-priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-task')">Cancel</button>
+      <button class="btn btn-primary" onclick="createTask()">Create Task →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════════════
+     JAVASCRIPT — The brain of the frontend
+     ════════════════════════════════════════════ -->
+<script>
+// ─────────────────────────────────────────────
+// CONFIG — Change this to your Railway backend URL
+// In development: http://localhost:5000
+// In production: https://your-app.up.railway.app
+// ─────────────────────────────────────────────
+const API = window.location.hostname === 'localhost'
+  ? 'http://localhost:5000/api'
+  : '/api'  // same origin if you serve frontend from backend
+
+// ─────────────────────────────────────────────
+// STATE — things we remember while app is open
+// ─────────────────────────────────────────────
+let currentUser = null   // logged-in user object
+let authToken = null     // JWT token string
+let allMembers = []      // cached members list (for task assignment dropdown)
+let selectedRole = 'member'
+
+// ─────────────────────────────────────────────
+// ON PAGE LOAD — check if already logged in
+// ─────────────────────────────────────────────
+window.onload = function() {
+  // Check if user had a saved token (persisted login)
+  const saved = localStorage.getItem('taskr_token')
+  const savedUser = localStorage.getItem('taskr_user')
+  if (saved && savedUser) {
+    authToken = saved
+    currentUser = JSON.parse(savedUser)
+    enterApp()
+  }
+}
+
+// ─────────────────────────────────────────────
+// AUTH FUNCTIONS
+// ─────────────────────────────────────────────
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='signup'))
+  })
+  document.getElementById('login-form').classList.toggle('hidden', tab !== 'login')
+  document.getElementById('signup-form').classList.toggle('hidden', tab !== 'signup')
+  hideAuthErr()
+}
+
+function pickRole(role) {
+  selectedRole = role
+  document.getElementById('role-member').classList.toggle('active', role === 'member')
+  document.getElementById('role-admin').classList.toggle('active', role === 'admin')
+}
+
+function showAuthErr(msg) {
+  const el = document.getElementById('auth-err')
+  el.textContent = msg
+  el.classList.remove('hidden')
+}
+function hideAuthErr() { document.getElementById('auth-err').classList.add('hidden') }
+
+async function handleLogin() {
+  hideAuthErr()
+  const email = document.getElementById('login-email').value.trim()
+  const password = document.getElementById('login-password').value
+
+  if (!email || !password) return showAuthErr('Please fill in all fields')
+
+  // Call our backend /api/auth/login
+  const res = await api('POST', '/auth/login', { email, password }, false)
+  if (res.error) return showAuthErr(res.error)
+
+  // Save token and user, then enter the app
+  authToken = res.token
+  currentUser = res.user
+  localStorage.setItem('taskr_token', authToken)
+  localStorage.setItem('taskr_user', JSON.stringify(currentUser))
+  enterApp()
+}
+
+async function handleSignup() {
+  hideAuthErr()
+  const name = document.getElementById('signup-name').value.trim()
+  const email = document.getElementById('signup-email').value.trim()
+  const password = document.getElementById('signup-password').value
+
+  if (!name || !email || !password) return showAuthErr('Please fill in all fields')
+  if (password.length < 6) return showAuthErr('Password must be at least 6 characters')
+
+  const res = await api('POST', '/auth/signup', { name, email, password, role: selectedRole }, false)
+  if (res.error) return showAuthErr(res.error)
+
+  authToken = res.token
+  currentUser = res.user
+  localStorage.setItem('taskr_token', authToken)
+  localStorage.setItem('taskr_user', JSON.stringify(currentUser))
+  enterApp()
+}
+
+// ─────────────────────────────────────────────
+// ENTER THE APP — called after successful login
+// ─────────────────────────────────────────────
+function enterApp() {
+  // Hide auth screen, show app
+  document.getElementById('auth-screen').style.display = 'none'
+  document.getElementById('app-screen').classList.add('active')
+
+  // Fill in the sidebar with user info
+  const initials = currentUser.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2)
+  document.getElementById('sidebar-avatar').textContent = initials
+  document.getElementById('sidebar-name').textContent = currentUser.name
+  document.getElementById('sidebar-role').textContent = currentUser.role
+  document.getElementById('sidebar-role-label').textContent = currentUser.role.toUpperCase()
+
+  // Show admin-only UI elements
+  if (currentUser.role === 'admin') {
+    document.getElementById('nav-members').style.display = 'flex'
+    document.getElementById('btn-create-project').style.display = 'flex'
+    document.getElementById('btn-create-task').style.display = 'flex'
+  }
+
+  // Update tasks subtitle for members
+  if (currentUser.role === 'member') {
+    document.getElementById('tasks-subtitle').textContent = 'Tasks assigned to you.'
+  }
+
+  // Load the dashboard first
+  showPage('dashboard')
+}
+
+function logout() {
+  authToken = null
+  currentUser = null
+  localStorage.removeItem('taskr_token')
+  localStorage.removeItem('taskr_user')
+  document.getElementById('auth-screen').style.display = 'flex'
+  document.getElementById('app-screen').classList.remove('active')
+}
+
+// ─────────────────────────────────────────────
+// NAVIGATION — switch between pages
+// ─────────────────────────────────────────────
+function showPage(name) {
+  // Toggle active class on nav items
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'))
+  event?.currentTarget?.classList.add('active')
+
+  // Hide all pages, show the chosen one
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.getElementById('page-' + name).classList.add('active')
+
+  // Load data for the page
+  if (name === 'dashboard') loadDashboard()
+  if (name === 'projects') loadProjects()
+  if (name === 'tasks') loadTasks()
+  if (name === 'members') loadMembers()
+}
+
+// ─────────────────────────────────────────────
+// API HELPER — makes HTTP requests to backend
+// This is the one function that handles ALL API calls
+// ─────────────────────────────────────────────
+async function api(method, path, body = null, auth = true) {
+  const headers = { 'Content-Type': 'application/json' }
+
+  // If auth=true, attach our JWT token so the backend knows who we are
+  if (auth && authToken) headers['Authorization'] = 'Bearer ' + authToken
+
+  try {
+    const res = await fetch(API + path, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : null
+    })
+    return await res.json()
+  } catch (err) {
+    return { error: 'Network error — is the backend running?' }
+  }
+}
+
+// ─────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────
+async function loadDashboard() {
+  const data = await api('GET', '/dashboard')
+  if (data.error) return
+
+  // Fill in stat cards
+  const s = data.stats
+  document.getElementById('stat-total').textContent = s.total
+  document.getElementById('stat-todo').textContent = s.todo
+  document.getElementById('stat-inprogress').textContent = s.inprogress
+  document.getElementById('stat-done').textContent = s.done
+  document.getElementById('stat-overdue').textContent = s.overdue
+
+  // Fill activity feed
+  const feed = document.getElementById('activity-feed')
+  if (!data.activity.length) {
+    feed.innerHTML = '<div class="muted" style="text-align:center;padding:20px">No activity yet. Create a task!</div>'
+    return
+  }
+
+  feed.innerHTML = data.activity.map(a => `
+    <div class="activity-item">
+      <div class="activity-dot"></div>
+      <div>
+        <div class="activity-text">
+          <strong>${a.user_name}</strong> ${a.action}
+        </div>
+        <div class="activity-time">${timeAgo(a.created_at)}</div>
+      </div>
+    </div>
+  `).join('')
+}
+
+// ─────────────────────────────────────────────
+// PROJECTS
+// ─────────────────────────────────────────────
+async function loadProjects() {
+  const projects = await api('GET', '/projects')
+  const container = document.getElementById('projects-list')
+
+  if (!projects.length) {
+    container.innerHTML = `
+      <div class="empty" style="grid-column:1/-1">
+        <div class="empty-icon">📁</div>
+        <div class="empty-text">No projects yet. ${currentUser.role==='admin'?'Create your first project!':'Ask your admin to create one.'}</div>
+      </div>`
+    return
+  }
+
+  container.innerHTML = projects.map(p => `
+    <div class="project-card" onclick="filterTasksByProject(${p.id}, '${esc(p.name)}')">
+      <div class="project-name">${esc(p.name)}</div>
+      <div class="project-desc">${esc(p.description || 'No description')}</div>
+      <div class="project-footer">
+        <span class="muted">${p.task_count} tasks</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="muted" style="font-size:11px">by ${esc(p.creator_name || 'Unknown')}</span>
+          ${currentUser.role==='admin'?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteProject(${p.id})">Delete</button>`:''}
+        </div>
+      </div>
+    </div>
+  `).join('')
+}
+
+function filterTasksByProject(projectId, projectName) {
+  showPage('tasks')
+  // Highlight the tasks nav
+  document.querySelectorAll('.nav-item').forEach((el,i) => el.classList.toggle('active', i===2))
+  // Set the filter dropdown
+  setTimeout(() => {
+    const sel = document.getElementById('filter-project')
+    if (sel) { sel.value = projectId; loadTasks() }
+  }, 100)
+}
+
+async function createProject() {
+  const name = document.getElementById('proj-name').value.trim()
+  const description = document.getElementById('proj-desc').value.trim()
+  if (!name) return toast('Project name is required', 'error')
+
+  const res = await api('POST', '/projects', { name, description })
+  if (res.error) return toast(res.error, 'error')
+
+  closeModal('modal-project')
+  document.getElementById('proj-name').value = ''
+  document.getElementById('proj-desc').value = ''
+  toast('Project created!', 'success')
+  loadProjects()
+  populateProjectDropdowns()
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project? All its tasks will also be deleted.')) return
+  const res = await api('DELETE', '/projects/' + id)
+  if (res.error) return toast(res.error, 'error')
+  toast('Project deleted', 'success')
+  loadProjects()
+}
+
+// ─────────────────────────────────────────────
+// TASKS
+// ─────────────────────────────────────────────
+async function loadTasks() {
+  const status = document.getElementById('filter-status')?.value || ''
+  const projectId = document.getElementById('filter-project')?.value || ''
+
+  let path = '/tasks'
+  const params = []
+  if (projectId) params.push('project_id=' + projectId)
+  if (params.length) path += '?' + params.join('&')
+
+  let tasks = await api('GET', path)
+  if (!Array.isArray(tasks)) tasks = []
+
+  // Client-side status filter
+  if (status) tasks = tasks.filter(t => t.status === status)
+
+  const today = new Date().toISOString().split('T')[0]
+  const container = document.getElementById('tasks-list')
+
+  if (!tasks.length) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">✅</div>
+        <div class="empty-text">No tasks found. ${currentUser.role==='admin'?'Create your first task!':'Ask your admin to assign you tasks.'}</div>
+      </div>`
+    return
+  }
+
+  container.innerHTML = tasks.map(t => {
+    const isOverdue = t.due_date && t.due_date.split('T')[0] < today && t.status !== 'done'
+    const canEdit = currentUser.role === 'admin' || t.assigned_to === currentUser.id
+
+    return `
+      <div class="task-card ${isOverdue ? 'overdue' : ''}">
+        <div style="flex:0;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span class="badge badge-${t.priority}">${t.priority}</span>
+        </div>
+        <div class="task-body">
+          <div class="task-title">${esc(t.title)}</div>
+          <div class="task-meta">
+            ${t.project_name ? `<span class="muted">📁 ${esc(t.project_name)}</span>` : ''}
+            ${t.assigned_name ? `<span class="muted">👤 ${esc(t.assigned_name)}</span>` : ''}
+            ${t.due_date ? `<span class="${isOverdue?'badge badge-overdue':'muted'}">📅 ${formatDate(t.due_date)}</span>` : ''}
+          </div>
+        </div>
+        <div class="task-actions">
+          ${canEdit ? `
+            <select class="status-select" onchange="updateTaskStatus(${t.id}, this.value)">
+              <option value="todo" ${t.status==='todo'?'selected':''}>To Do</option>
+              <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In Progress</option>
+              <option value="done" ${t.status==='done'?'selected':''}>Done</option>
+            </select>
+          ` : `<span class="badge badge-${t.status}">${t.status==='inprogress'?'In Progress':t.status==='done'?'Done':'To Do'}</span>`}
+          ${currentUser.role==='admin' ? `
+            <button class="btn btn-danger btn-sm" onclick="deleteTask(${t.id})">Delete</button>
+          ` : ''}
+        </div>
+      </div>
+    `
+  }).join('')
+}
+
+async function updateTaskStatus(taskId, newStatus) {
+  const res = await api('PATCH', '/tasks/' + taskId + '/status', { status: newStatus })
+  if (res.error) return toast(res.error, 'error')
+  toast('Status updated!', 'success')
+  loadDashboard()  // refresh dashboard stats too
+}
+
+async function createTask() {
+  const title = document.getElementById('task-title').value.trim()
+  const description = document.getElementById('task-desc').value.trim()
+  const project_id = document.getElementById('task-project').value
+  const assigned_to = document.getElementById('task-assign').value || null
+  const due_date = document.getElementById('task-due').value || null
+  const priority = document.getElementById('task-priority').value
+
+  if (!title) return toast('Task title is required', 'error')
+  if (!project_id) return toast('Please select a project', 'error')
+
+  const res = await api('POST', '/tasks', { title, description, project_id, assigned_to, due_date, priority })
+  if (res.error) return toast(res.error, 'error')
+
+  closeModal('modal-task')
+  document.getElementById('task-title').value = ''
+  document.getElementById('task-desc').value = ''
+  toast('Task created!', 'success')
+  loadTasks()
+}
+
+async function deleteTask(id) {
+  if (!confirm('Delete this task?')) return
+  const res = await api('DELETE', '/tasks/' + id)
+  if (res.error) return toast(res.error, 'error')
+  toast('Task deleted', 'success')
+  loadTasks()
+}
+
+// ─────────────────────────────────────────────
+// MEMBERS
+// ─────────────────────────────────────────────
+async function loadMembers() {
+  const members = await api('GET', '/members')
+  allMembers = members
+  const container = document.getElementById('members-list')
+
+  container.innerHTML = members.map(m => {
+    const initials = m.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)
+    return `
+      <div class="member-row">
+        <div class="member-avatar">${initials}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:500">${esc(m.name)}</div>
+          <div class="muted">${esc(m.email)}</div>
+        </div>
+        <span class="badge badge-${m.role}">${m.role}</span>
+        <span class="muted" style="font-size:11px;margin-left:8px">Joined ${formatDate(m.created_at)}</span>
+      </div>
+    `
+  }).join('')
+}
+
+// ─────────────────────────────────────────────
+// MODAL HELPERS
+// ─────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open')
+
+  // When opening task modal, fill the project and member dropdowns
+  if (id === 'modal-task') populateTaskModal()
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open')
+}
+
+// Close modal when clicking outside it
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open')
+  })
+})
+
+async function populateTaskModal() {
+  // Load projects for dropdown
+  const projects = await api('GET', '/projects')
+  const projSel = document.getElementById('task-project')
+  projSel.innerHTML = '<option value="">Select project</option>' +
+    projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')
+
+  // Load members for assignment dropdown
+  const members = await api('GET', '/members')
+  const memSel = document.getElementById('task-assign')
+  memSel.innerHTML = '<option value="">Unassigned</option>' +
+    members.map(m => `<option value="${m.id}">${esc(m.name)} (${m.role})</option>`).join('')
+
+  // Also populate the filter project dropdown in tasks page
+  populateProjectDropdowns(projects)
+}
+
+async function populateProjectDropdowns(projects) {
+  if (!projects) projects = await api('GET', '/projects')
+  const filterSel = document.getElementById('filter-project')
+  if (!filterSel) return
+  const current = filterSel.value
+  filterSel.innerHTML = '<option value="">All projects</option>' +
+    projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')
+  filterSel.value = current
+}
+
+// ─────────────────────────────────────────────
+// TOAST NOTIFICATION
+// ─────────────────────────────────────────────
+let toastTimer
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.className = 'toast show ' + type
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000)
+}
+
+// ─────────────────────────────────────────────
+// UTILITY FUNCTIONS
+// ─────────────────────────────────────────────
+
+// Escape HTML to prevent XSS attacks
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+// "2 hours ago", "3 days ago", etc.
+function timeAgo(dateStr) {
+  const diff = (Date.now() - new Date(dateStr)) / 1000
+  if (diff < 60) return 'just now'
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago'
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago'
+  return Math.floor(diff/86400) + 'd ago'
+}
+
+// "Jan 15, 2025"
+function formatDate(str) {
+  if (!str) return ''
+  return new Date(str).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })
+}
+
+// Load project dropdown on tasks page when it loads
+window.addEventListener('load', () => {
+  setTimeout(() => populateProjectDropdowns(), 2000)
+})
+</script>
+</body>
+</html>
