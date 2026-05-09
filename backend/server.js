@@ -344,7 +344,19 @@ app.delete('/api/tasks/:id', requireAuth, requireAdmin, async (req, res) => {
 // ════════════════════════════════════════════════════════════════
 // MEMBERS ROUTE
 // ════════════════════════════════════════════════════════════════
+// PATCH /api/members/:id/promote — Promote member to admin (Admin only)
+app.patch('/api/members/:id/promote', requireAuth, requireAdmin, async (req, res) => {
+  const { role } = req.body
+  if (!['admin', 'member'].includes(role)) return res.status(400).json({ error: 'Invalid role' })
 
+  await pool.query('UPDATE users SET role = $1 WHERE id = $2', [role, req.params.id])
+
+  const user = await pool.query('SELECT name FROM users WHERE id = $1', [req.params.id])
+  const action = role === 'admin' ? 'promoted' : 'demoted'
+  await logActivity(req.user.id, req.user.name, `${action} ${user.rows[0].name} to ${role}`)
+
+  res.json({ success: true })
+})
 // GET /api/members — List all users (Admin only)
 app.get('/api/members', requireAuth, requireAdmin, async (req, res) => {
   const result = await pool.query(

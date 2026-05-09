@@ -372,13 +372,7 @@ label{font-size:13px;color:var(--muted);margin-bottom:5px;display:block}
         <label>Password</label>
         <input type="password" id="signup-password" placeholder="Min 6 characters"/>
       </div>
-      <div class="form-group">
-        <label>I am joining as</label>
-        <div class="auth-role-pick">
-          <div class="role-btn active" id="role-member" onclick="pickRole('member')">👤 Member</div>
-          <div class="role-btn" id="role-admin" onclick="pickRole('admin')">👑 Admin</div>
-        </div>
-      </div>
+      
       <button class="btn btn-primary w100" onclick="handleSignup()">Create account →</button>
     </div>
   </div>
@@ -736,6 +730,17 @@ function enterApp() {
   showPage('dashboard')
 }
 
+async function promoteUser(userId, newRole) {
+  const action = newRole === 'admin' ? 'promote this member to Admin' : 'demote this Admin to Member'
+  if (!confirm(`Are you sure you want to ${action}?`)) return
+
+  const res = await api('PATCH', '/members/' + userId + '/promote', { role: newRole })
+  if (res.error) return toast(res.error, 'error')
+
+  toast(newRole === 'admin' ? '👑 Promoted to Admin!' : '👤 Moved back to Member', 'success')
+  loadMembers()  // refresh the list
+}
+
 function logout() {
   authToken = null
   currentUser = null
@@ -1004,9 +1009,15 @@ async function loadMembers() {
           <div style="font-size:14px;font-weight:500">${esc(m.name)}</div>
           <div class="muted">${esc(m.email)}</div>
         </div>
-        <span class="badge badge-${m.role}">${m.role}</span>
+       <span class="badge badge-${m.role}">${m.role}</span>
         <span class="muted" style="font-size:11px;margin-left:8px">Joined ${formatDate(m.created_at)}</span>
-      </div>
+        ${m.id !== currentUser.id ? `
+          <button 
+            class="btn btn-sm ${m.role === 'member' ? 'btn-primary' : 'btn-ghost'}"
+            onclick="promoteUser(${m.id}, '${m.role === 'member' ? 'admin' : 'member'}')">
+            ${m.role === 'member' ? '👑 Make Admin' : '👤 Make Member'}
+          </button>
+        ` : '<span class="muted" style="font-size:11px">(you)</span>'}
     `
   }).join('')
 }
